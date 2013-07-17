@@ -4,7 +4,7 @@ Command line TODO management, written in Go
 
 ## Install
 
-```go build```
+Clone the repo, then: ```go build```
 
 ## Add a todo
 
@@ -12,9 +12,10 @@ Command line TODO management, written in Go
 
 ## List todos
 
-```./godo```
 
 ```
+./godo
+    
 1) [✗] - learn go
 2) [✗] - make godo better
 3) [✗] - buy bananas
