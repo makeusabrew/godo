@@ -15,6 +15,8 @@ func main() {
     // parse all flags into their respective variables
     flag.Parse()
 
+    godo.LoadTasks()
+
     if newTask != "" {
         fmt.Println("Creating new task...")
 
@@ -23,7 +25,7 @@ func main() {
     }
 
     if list {
-        fmt.Println("listing todos...")
+        fmt.Println("listing todos...\n")
 
         listTasks()
         return
@@ -31,18 +33,19 @@ func main() {
 }
 
 func createTask(text string) bool {
-    fmt.Println(text)
 
-    task := godo.Task{"foo", 1}
+    godo.AddTask(text)
 
-    fmt.Println(task)
+    godo.WriteTasks()
 
     return true
 }
 
-func listTasks() (tasks []godo.Task) {
+func listTasks() {
 
-    tasks = godo.LoadTasks()
+    tasks := godo.GetTasks()
 
-    return
+    for _, task := range(tasks) {
+        fmt.Println(task.Order, ") " + task.Text)
+    }
 }

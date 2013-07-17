@@ -4,7 +4,7 @@ import (
     "os"
     "log"
     "os/user"
-    "fmt"
+    "bufio"
 )
 
 type Task struct {
@@ -12,18 +12,74 @@ type Task struct {
     Order int
 }
 
-func LoadTasks() (tasks []Task) {
+func getTaskPath() (path string) {
     user, err := user.Current()
     if err != nil {
         log.Fatal(err)
     }
 
-    file, err := os.Open(user.HomeDir + "/.godo/tasks")
+    path = user.HomeDir + "/.godo/tasks"
+
+    return
+}
+
+var tasks []Task
+
+func LoadTasks() ([]Task) {
+
+    file, err := os.Open(getTaskPath())
+
     if err != nil {
         log.Fatal(err)
     }
 
-    fmt.Println(file)
+    reader := bufio.NewReader(file)
 
-    return
+    defer file.Close()
+
+    for {
+        line, err := reader.ReadString('\n')
+        if err != nil {
+            break
+        }
+
+        AddTask(line[:len(line)-1])
+
+    }
+
+    return tasks
+}
+
+func GetTasks() ([]Task) {
+    return tasks
+}
+
+
+func AddTask(text string) {
+    order := len(tasks) + 1
+    tasks = append(tasks, Task{text, order})
+}
+
+func WriteTasks() {
+    file, err := os.Create(getTaskPath())
+
+    writer := bufio.NewWriter(file)
+
+    defer file.Close()
+
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, task := range(tasks) {
+        print(task.Text)
+        _, err := writer.WriteString(task.Text + "\n")
+
+        if err != nil {
+            log.Fatal(err)
+        }
+
+    }
+
+    writer.Flush()
 }
