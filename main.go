@@ -46,3 +46,7 @@ func listTasks() {
     }
     fmt.Println()
 }
+
+func colour(c int) string {
+    return fmt.Sprintf("\x1b[%dm", c)
+}
