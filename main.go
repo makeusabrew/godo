@@ -7,11 +7,8 @@ import (
 )
 
 func main() {
-    var newTask string
-    var list bool
-    flag.StringVar(&newTask, "a", "", "add a new todo")
-    flag.BoolVar(&list, "l", false, "list outstanding tasks")
-
+    newTask := flag.String("a", "", "add a new todo")
+    list := flag.Bool("l", false, "list outstanding tasks")
     doneTask := flag.Int("d", -1, "mark a task as done")
 
     // parse all flags into their respective variables
@@ -19,12 +16,12 @@ func main() {
 
     godo.LoadTasks()
 
-    if newTask != "" {
-        addTask(newTask)
+    if *newTask != "" {
+        addTask(*newTask)
         return
     }
 
-    if list {
+    if *list {
         listTasks()
         return
     }
