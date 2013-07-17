@@ -20,8 +20,7 @@ func main() {
     godo.LoadTasks()
 
     if newTask != "" {
-        fmt.Println("Creating new task '"+newTask+"'")
-        godo.AddTask(newTask)
+        addTask(newTask)
         return
     }
 
@@ -34,6 +33,22 @@ func main() {
         godo.MarkTaskDone(*doneTask)
         return
     }
+
+    // if we got here, start looking at some shortcut commands
+
+    switch args := flag.Args(); len(args) {
+    case 0:
+        listTasks()
+        return
+    case 1:
+        addTask(args[0])
+        return
+    }
+}
+
+func addTask(newTask string) {
+    fmt.Println("Creating new task '"+newTask+"'")
+    godo.AddTask(newTask)
 }
 
 func listTasks() {
