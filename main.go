@@ -4,11 +4,13 @@ import (
     "flag"
     "fmt"
     "github.com/makeusabrew/godo/src/godo"
+    "github.com/makeusabrew/godo/src/godo/client"
 )
 
 func main() {
     newTask := flag.String("a", "", "add a new todo")
     list := flag.Bool("l", false, "list outstanding tasks")
+    sync := flag.Bool("s", false, "sync tasks")
     doneTask := flag.Int("d", -1, "mark a task as done")
 
     // parse all flags into their respective variables
@@ -23,6 +25,11 @@ func main() {
 
     if *list {
         listTasks()
+        return
+    }
+
+    if *sync {
+        syncTasks()
         return
     }
 
@@ -57,6 +64,10 @@ func listTasks() {
         fmt.Printf("%d) [%s] - %s\n", task.Order, task.Status(), task.Text)
     }
     fmt.Println()
+}
+
+func syncTasks() {
+    client.ReadRemoteTasks()
 }
 
 func colour(c int) string {
