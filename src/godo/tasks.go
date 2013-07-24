@@ -20,7 +20,7 @@ func getTaskPath() (path string) {
         log.Fatal(err)
     }
 
-    path = user.HomeDir + "/.godo/tasks"
+    path = user.HomeDir + "/.godo/lists/tasks"
 
     return
 }

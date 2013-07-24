@@ -7,27 +7,61 @@ import (
     "io/ioutil"
 )
 
-func ReadRemoteTasks() {
-    fmt.Println("syncing")
-    res, err := http.Get("http://a/url/sample.json")
+type GithubAuthorization struct {
+    Id int
+    Token string
+    App GithubApp
+}
 
-    if err != nil {
-        fmt.Println("could not sync")
-        return
-    }
+type GithubApp struct {
+    ClientId string `json:"client_id"`
+    Name string
+}
 
-    defer res.Body.Close()
+func GetAuthorizations(username string, password string) {
+    client := &http.Client{}
+    request, _ := http.NewRequest("GET", "https://api.github.com/authorizations", nil)
 
-    var data interface{}
+    request.SetBasicAuth(username, password)
 
-    body, err := ioutil.ReadAll(res.Body)
+    response, err := client.Do(request)
+
+    defer response.Body.Close()
 
     if err != nil {
         fmt.Println("err", err)
         return
     }
 
-    json.Unmarshal(body, &data)
+    body, err := ioutil.ReadAll(response.Body)
 
-    fmt.Println("data", data)
+    if err != nil {
+        fmt.Println("Could not read response body")
+        return
+    }
+
+    var apps []GithubAuthorization
+
+    err = json.Unmarshal(body, &apps)
+
+    if err != nil {
+        fmt.Println("JSON unmarshal error", err)
+        return
+    }
+
+    if response.StatusCode != 200 {
+        fmt.Println("Bad response code", response.StatusCode)
+        return
+    }
+
+    for i, app := range apps {
+        fmt.Println(i, app.App.Name)
+    }
 }
+
+func Authed() bool {
+    return false
+}
+
+func FetchRemoteTasks() {}
+func PushRemoteTasks() {}

@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/makeusabrew/godo/src/godo"
     "github.com/makeusabrew/godo/src/godo/client"
+    "code.google.com/p/gopass"
 )
 
 func main() {
@@ -67,9 +68,29 @@ func listTasks() {
 }
 
 func syncTasks() {
-    client.ReadRemoteTasks()
+    if client.Authed() {
+        client.FetchRemoteTasks()
+        client.PushRemoteTasks()
+    } else {
+        username := getInput("Please enter your username: ")
+        password, err := gopass.GetPass("Please enter your password: ")
+
+        // @TODO how *do* we properly handle errors?
+        if err != nil {
+            return
+        }
+
+        client.GetAuthorizations(username, password)
+
+    }
 }
 
 func colour(c int) string {
     return fmt.Sprintf("\x1b[%dm", c)
+}
+
+func getInput(prompt string) (input string) {
+    fmt.Print(prompt)
+    fmt.Scanln(&input)
+    return
 }
