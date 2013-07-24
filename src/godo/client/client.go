@@ -10,12 +10,10 @@ import (
 type GithubAuthorization struct {
     Id int
     Token string
-    App GithubApp
-}
-
-type GithubApp struct {
-    ClientId string `json:"client_id"`
-    Name string
+    App struct {
+        ClientId string `json:"client_id"`
+        Name string
+    }
 }
 
 func GetAuthorizations(username string, password string) {
