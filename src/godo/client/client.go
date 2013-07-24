@@ -40,9 +40,9 @@ func GetAuthorizations(username string, password string) {
         return
     }
 
-    var apps []GithubAuthorization
+    var authlist []GithubAuthorization
 
-    err = json.Unmarshal(body, &apps)
+    err = json.Unmarshal(body, &authlist)
 
     if err != nil {
         fmt.Println("JSON unmarshal error", err)
@@ -54,8 +54,11 @@ func GetAuthorizations(username string, password string) {
         return
     }
 
-    for i, app := range apps {
-        fmt.Println(i, app.App.Name)
+    for i, auth := range authlist {
+        fmt.Println(i, auth.App.Name)
+        // pick out auth.App.Id, check it against our config client ID
+        // if we have one, great - use the token and move on
+        // else POST /authorizations for our app and use the returned token
     }
 }
 
