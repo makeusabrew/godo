@@ -66,6 +66,13 @@ func Authed() bool {
     return currentUser.authed
 }
 
+type Gist struct {
+    Files map[string] struct {
+        Filename string
+        Url string `json:"raw_url"`
+    }
+}
+
 func FetchRemoteTasks() {
     fmt.Println("Fetching remote tasks")
     body, err := authedGithubRequest("gists/" + currentUser.GistId)
@@ -74,12 +81,32 @@ func FetchRemoteTasks() {
         return
     }
 
-    var decoded interface{}
+    var gist Gist
 
-    err = json.Unmarshal(body, &decoded)
+    err = json.Unmarshal(body, &gist)
 
-    fmt.Println(decoded)
+    if err != nil {
+        return
+    }
 
+    // _ = key
+    gists := make(chan string, len(gist.Files))
+    for _, file := range gist.Files {
+        go readGist(file.Url, gists)
+    }
+
+    for i := 0; i < len(gist.Files); i++ {
+        fmt.Println(i, <-gists)
+    }
+}
+
+func readGist(url string, gists chan<- string) {
+    request, _ := http.NewRequest("GET", url, nil)
+    body, err := doRequest(request)
+
+    if err == nil {
+        gists <- string(body)
+    }
 }
 
 func PushRemoteTasks() {}
