@@ -19,6 +19,8 @@ type GithubAuthorization struct {
 }
 
 type User struct {
+    GistId string
+
     token string
     authed bool
 }
@@ -66,7 +68,7 @@ func Authed() bool {
 
 func FetchRemoteTasks() {
     fmt.Println("Fetching remote tasks")
-    body, err := authedGithubRequest("gists")
+    body, err := authedGithubRequest("gists/" + currentUser.GistId)
 
     if err != nil {
         return

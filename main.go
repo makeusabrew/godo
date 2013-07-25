@@ -16,6 +16,8 @@ func main() {
     // parse all flags into their respective variables
     flag.Parse()
 
+    godo.LoadConfig()
+
     godo.LoadTasks()
 
     if *newTask != "" {

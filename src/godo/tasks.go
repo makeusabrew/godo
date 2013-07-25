@@ -3,7 +3,6 @@ package godo
 import (
     "os"
     "log"
-    "os/user"
     "bufio"
     "encoding/json"
 )
@@ -15,14 +14,7 @@ type Task struct {
 }
 
 func getTaskPath() (path string) {
-    user, err := user.Current()
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    path = user.HomeDir + "/.godo/lists/tasks"
-
-    return
+    return baseDir() + "/lists/tasks"
 }
 
 var tasks []Task
