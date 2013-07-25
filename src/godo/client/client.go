@@ -31,20 +31,10 @@ func (u *User) authenticate(token string) {
 var user = &User{}
 
 func Authenticate(username string, password string) error {
-    client := &http.Client{}
     request, _ := http.NewRequest("GET", "https://api.github.com/authorizations", nil)
-
     request.SetBasicAuth(username, password)
 
-    response, err := client.Do(request)
-
-    defer response.Body.Close()
-
-    if err != nil {
-        return err
-    }
-
-    body, err := ioutil.ReadAll(response.Body)
+    body, err := doRequest(request)
 
     if err != nil {
         return err
@@ -56,10 +46,6 @@ func Authenticate(username string, password string) error {
 
     if err != nil {
         return err
-    }
-
-    if response.StatusCode != 200 {
-        return errors.New("Bad response code " + response.Status)
     }
 
     token := getToken(authlist)
@@ -80,9 +66,52 @@ func Authed() bool {
 
 func FetchRemoteTasks() {
     fmt.Println("Fetching remote tasks")
+    body, err := authedGithubRequest("gists")
+
+    if err != nil {
+        return
+    }
+
+    var decoded interface{}
+
+    err = json.Unmarshal(body, &decoded)
+
+    fmt.Println(decoded)
+
 }
 
 func PushRemoteTasks() {}
+
+func authedGithubRequest(url string) (body []byte, err error) {
+    request, _ := http.NewRequest("GET", "https://api.github.com/" + url, nil)
+    request.Header.Add("Authorization", "bearer "+user.token)
+
+    return doRequest(request)
+}
+
+func doRequest(request *http.Request) (body []byte, err error) {
+    client := &http.Client{}
+
+    response, err := client.Do(request)
+
+    defer response.Body.Close()
+
+    if err != nil {
+        return body, err
+    }
+
+    if response.StatusCode != 200 {
+        return body, errors.New("Bad response code " + response.Status)
+    }
+
+    body, err = ioutil.ReadAll(response.Body)
+
+    if err != nil {
+        return body, err
+    }
+
+    return body, nil
+}
 
 func getToken(list []GithubAuthorization) (token string) {
     clientId := os.Getenv("CLIENT_ID")
