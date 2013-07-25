@@ -3,8 +3,10 @@ package client
 import (
     "encoding/json"
     "net/http"
-    "fmt"
     "io/ioutil"
+    "fmt"
+    "os"
+    "errors"
 )
 
 type GithubAuthorization struct {
@@ -16,7 +18,19 @@ type GithubAuthorization struct {
     }
 }
 
-func GetAuthorizations(username string, password string) {
+type User struct {
+    token string
+    authed bool
+}
+
+func (u *User) authenticate(token string) {
+    u.authed = true
+    u.token = token
+}
+
+var user = &User{}
+
+func Authenticate(username string, password string) error {
     client := &http.Client{}
     request, _ := http.NewRequest("GET", "https://api.github.com/authorizations", nil)
 
@@ -27,15 +41,13 @@ func GetAuthorizations(username string, password string) {
     defer response.Body.Close()
 
     if err != nil {
-        fmt.Println("err", err)
-        return
+        return err
     }
 
     body, err := ioutil.ReadAll(response.Body)
 
     if err != nil {
-        fmt.Println("Could not read response body")
-        return
+        return err
     }
 
     var authlist []GithubAuthorization
@@ -43,26 +55,42 @@ func GetAuthorizations(username string, password string) {
     err = json.Unmarshal(body, &authlist)
 
     if err != nil {
-        fmt.Println("JSON unmarshal error", err)
-        return
+        return err
     }
 
     if response.StatusCode != 200 {
-        fmt.Println("Bad response code", response.StatusCode)
-        return
+        return errors.New("Bad response code " + response.Status)
     }
 
-    for i, auth := range authlist {
-        fmt.Println(i, auth.App.Name)
-        // pick out auth.App.Id, check it against our config client ID
-        // if we have one, great - use the token and move on
-        // else POST /authorizations for our app and use the returned token
+    token := getToken(authlist)
+
+    if token == "" {
+        return errors.New("Could not authenticate")
     }
+
+    user.authenticate(token)
+
+    return nil
+
 }
 
 func Authed() bool {
-    return false
+    return user.authed
 }
 
-func FetchRemoteTasks() {}
+func FetchRemoteTasks() {
+    fmt.Println("Fetching remote tasks")
+}
+
 func PushRemoteTasks() {}
+
+func getToken(list []GithubAuthorization) (token string) {
+    clientId := os.Getenv("CLIENT_ID")
+    for _, auth := range list {
+        if auth.App.ClientId == clientId {
+            token = auth.Token
+            return;
+        }
+    }
+    return
+}

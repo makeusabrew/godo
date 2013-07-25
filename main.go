@@ -68,10 +68,7 @@ func listTasks() {
 }
 
 func syncTasks() {
-    if client.Authed() {
-        client.FetchRemoteTasks()
-        client.PushRemoteTasks()
-    } else {
+    if !client.Authed() {
         username := getInput("Please enter your username: ")
         password, err := gopass.GetPass("Please enter your password: ")
 
@@ -80,9 +77,14 @@ func syncTasks() {
             return
         }
 
-        client.GetAuthorizations(username, password)
-
+        err = client.Authenticate(username, password); if err != nil {
+            fmt.Println("Could not authenticate!")
+            return
+        }
     }
+
+    client.FetchRemoteTasks()
+    client.PushRemoteTasks()
 }
 
 func colour(c int) string {
