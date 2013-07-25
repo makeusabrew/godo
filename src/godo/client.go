@@ -1,4 +1,4 @@
-package client
+package godo
 
 import (
     "encoding/json"
@@ -28,7 +28,7 @@ func (u *User) authenticate(token string) {
     u.token = token
 }
 
-var user = &User{}
+var currentUser = &User{}
 
 func Authenticate(username string, password string) error {
     request, _ := http.NewRequest("GET", "https://api.github.com/authorizations", nil)
@@ -54,14 +54,14 @@ func Authenticate(username string, password string) error {
         return errors.New("Could not authenticate")
     }
 
-    user.authenticate(token)
+    currentUser.authenticate(token)
 
     return nil
 
 }
 
 func Authed() bool {
-    return user.authed
+    return currentUser.authed
 }
 
 func FetchRemoteTasks() {
@@ -84,7 +84,7 @@ func PushRemoteTasks() {}
 
 func authedGithubRequest(url string) (body []byte, err error) {
     request, _ := http.NewRequest("GET", "https://api.github.com/" + url, nil)
-    request.Header.Add("Authorization", "bearer "+user.token)
+    request.Header.Add("Authorization", "bearer "+currentUser.token)
 
     return doRequest(request)
 }

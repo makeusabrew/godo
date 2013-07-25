@@ -4,7 +4,6 @@ import (
     "flag"
     "fmt"
     "github.com/makeusabrew/godo/src/godo"
-    "github.com/makeusabrew/godo/src/godo/client"
     "code.google.com/p/gopass"
 )
 
@@ -68,7 +67,7 @@ func listTasks() {
 }
 
 func syncTasks() {
-    if !client.Authed() {
+    if !godo.Authed() {
         username := getInput("Please enter your username: ")
         password, err := gopass.GetPass("Please enter your password: ")
 
@@ -77,14 +76,14 @@ func syncTasks() {
             return
         }
 
-        err = client.Authenticate(username, password); if err != nil {
+        err = godo.Authenticate(username, password); if err != nil {
             fmt.Println("Could not authenticate!")
             return
         }
     }
 
-    client.FetchRemoteTasks()
-    client.PushRemoteTasks()
+    godo.FetchRemoteTasks()
+    godo.PushRemoteTasks()
 }
 
 func colour(c int) string {
