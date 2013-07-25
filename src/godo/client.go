@@ -30,14 +30,14 @@ func (u *User) authenticate(token string) {
 
 var currentUser = &User{}
 
-func Authenticate(username string, password string) error {
+func Authenticate(username string, password string) (err error) {
     request, _ := http.NewRequest("GET", "https://api.github.com/authorizations", nil)
     request.SetBasicAuth(username, password)
 
     body, err := doRequest(request)
 
     if err != nil {
-        return err
+        return
     }
 
     var authlist []GithubAuthorization
@@ -45,7 +45,7 @@ func Authenticate(username string, password string) error {
     err = json.Unmarshal(body, &authlist)
 
     if err != nil {
-        return err
+        return
     }
 
     token := getToken(authlist)
@@ -56,7 +56,7 @@ func Authenticate(username string, password string) error {
 
     currentUser.authenticate(token)
 
-    return nil
+    return
 
 }
 
@@ -97,7 +97,7 @@ func doRequest(request *http.Request) (body []byte, err error) {
     defer response.Body.Close()
 
     if err != nil {
-        return body, err
+        return
     }
 
     if response.StatusCode != 200 {
@@ -107,10 +107,10 @@ func doRequest(request *http.Request) (body []byte, err error) {
     body, err = ioutil.ReadAll(response.Body)
 
     if err != nil {
-        return body, err
+        return
     }
 
-    return body, nil
+    return
 }
 
 func getToken(list []GithubAuthorization) (token string) {
@@ -118,7 +118,7 @@ func getToken(list []GithubAuthorization) (token string) {
     for _, auth := range list {
         if auth.App.ClientId == clientId {
             token = auth.Token
-            return;
+            return
         }
     }
     return
