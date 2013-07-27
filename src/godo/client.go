@@ -25,6 +25,16 @@ type User struct {
     authed bool
 }
 
+type GistFile struct {
+    Filename string
+    Url string `json:"raw_url"`
+    Body []byte
+}
+
+type Gist struct {
+    Files map[string] GistFile
+}
+
 func (u *User) authenticate(token string) {
     u.authed = true
     u.token = token
@@ -70,13 +80,6 @@ func Authed() bool {
     return currentUser.authed
 }
 
-type Gist struct {
-    Files map[string] struct {
-        Filename string
-        Url string `json:"raw_url"`
-    }
-}
-
 func FetchRemoteTasks() {
     fmt.Println("Fetching remote tasks")
     body, err := authedGithubRequest("gists/" + currentUser.GistId)
@@ -93,23 +96,31 @@ func FetchRemoteTasks() {
         return
     }
 
-    // _ = key
-    gists := make(chan string, len(gist.Files))
+    done := make(chan bool)
+    // _ = key, which we don't yet care about
     for _, file := range gist.Files {
-        go readGist(file.Url, gists)
+        // re-assigning file within the for {} scope
+        // just means we can avoid a closure
+        file := file
+        go readGist(&file, done)
     }
 
-    for i := 0; i < len(gist.Files); i++ {
-        fmt.Println(i, <-gists)
+    for _, file := range gist.Files {
+        <-done
+        // @FIXME: the files we passed by reference were *still*
+        // just copies. We can't get the address of a map. Hmm
+        fmt.Println(file.Body)
     }
 }
 
-func readGist(url string, gists chan<- string) {
-    request, _ := http.NewRequest("GET", url, nil)
+func readGist(file *GistFile, done chan<- bool) {
+    fmt.Println(file.Url)
+    request, _ := http.NewRequest("GET", file.Url, nil)
     body, err := doRequest(request)
 
     if err == nil {
-        gists <- string(body)
+        file.Body = body
+        done <- true
     }
 }
 
