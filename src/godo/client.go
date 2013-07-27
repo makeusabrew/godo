@@ -28,7 +28,7 @@ type User struct {
 type GistFile struct {
     Filename string
     Url string `json:"raw_url"`
-    Body []byte
+    Body string
 }
 
 type Gist struct {
@@ -97,31 +97,35 @@ func FetchRemoteTasks() {
     }
 
     done := make(chan bool)
-    // _ = key, which we don't yet care about
-    for _, file := range gist.Files {
-        // re-assigning file within the for {} scope
-        // just means we can avoid a closure
-        file := file
-        go readGist(&file, done)
+
+    for key := range gist.Files {
+        // re-assigning key here just means we don't have to pass it to
+        // the closure
+        key := key
+
+        go func() {
+            request, _ := http.NewRequest("GET", gist.Files[key].Url, nil)
+            body, err := doRequest(request)
+
+            if err == nil {
+                // can't do a read-modify-write, so have to get the current
+                // struct in its entirity and update that then re-assign
+                file := gist.Files[key]
+                file.Body = string(body)
+                gist.Files[key] = file
+                done <- true
+            }
+        }()
+
     }
 
-    for _, file := range gist.Files {
+    // is there a neater way of waiting for all the functions to return rather
+    // than blocking len(files) times? feels a bit clunky...
+    for i := 0; i < len(gist.Files); i++ {
         <-done
-        // @FIXME: the files we passed by reference were *still*
-        // just copies. We can't get the address of a map. Hmm
-        fmt.Println(file.Body)
     }
-}
 
-func readGist(file *GistFile, done chan<- bool) {
-    fmt.Println(file.Url)
-    request, _ := http.NewRequest("GET", file.Url, nil)
-    body, err := doRequest(request)
-
-    if err == nil {
-        file.Body = body
-        done <- true
-    }
+    fmt.Println(gist.Files)
 }
 
 func PushRemoteTasks() {}
