@@ -79,7 +79,7 @@ func syncTasks() {
         }
 
         err = godo.Authenticate(username, password); if err != nil {
-            fmt.Println("Could not authenticate!")
+            fmt.Println("Could not authenticate!", err)
             return
         }
     }

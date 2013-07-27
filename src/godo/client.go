@@ -50,10 +50,14 @@ func Authenticate(username string, password string) (err error) {
         return
     }
 
-    token := getToken(authlist)
+    token, err := getToken(authlist)
+
+    if err != nil {
+        return
+    }
 
     if token == "" {
-        return errors.New("Could not authenticate")
+        return errors.New("Could not retrieve token")
     }
 
     currentUser.authenticate(token)
@@ -142,8 +146,12 @@ func doRequest(request *http.Request) (body []byte, err error) {
     return
 }
 
-func getToken(list []GithubAuthorization) (token string) {
+func getToken(list []GithubAuthorization) (token string, err error) {
     clientId := os.Getenv("CLIENT_ID")
+    if clientId == "" {
+        return token, errors.New("No CLIENT_ID environment variable set")
+    }
+
     for _, auth := range list {
         if auth.App.ClientId == clientId {
             token = auth.Token
