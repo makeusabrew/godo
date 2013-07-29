@@ -3,8 +3,11 @@ package godo
 import (
     "os"
     "log"
+    "io/ioutil"
     "bufio"
     "encoding/json"
+    "regexp"
+    "strings"
 )
 
 type Task struct {
@@ -14,34 +17,37 @@ type Task struct {
 }
 
 func getTaskPath() (path string) {
-    return baseDir() + "/lists/tasks"
+    return baseDir() + "/lists/" + c.List
 }
 
 var tasks []Task
 
 func LoadTasks() ([]Task) {
 
-    file, err := os.Open(getTaskPath())
+    body, err := ioutil.ReadFile(getTaskPath())
 
     if err != nil {
         log.Fatal(err)
     }
 
-    reader := bufio.NewReader(file)
+    lines := strings.Split(string(body), "\n")
 
-    defer file.Close()
+    regexp := regexp.MustCompile(`-\s*\[(x|\s)\]\s?(.+)`)
 
-    for {
-        line, err := reader.ReadString('\n')
-        if err != nil {
-            break
+    for i, line := range lines {
+
+        matches := regexp.FindStringSubmatch(line)
+
+        if len(matches) == 0 {
+            continue
         }
 
-        var task Task
-
-        data := line[:len(line)-1]
-
-        json.Unmarshal([]byte(data), &task)
+        task := Task{}
+        task.Text = matches[2]
+        task.Order = i
+        if matches[1] == "x" {
+            task.Done = true
+        }
 
         tasks = append(tasks, task)
 

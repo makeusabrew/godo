@@ -22,6 +22,7 @@ func baseDir() (path string) {
 type config struct {
     GistId string `json:"gistId"`
     Token string `json:"token"`
+    List string `json:"currentList"`
 }
 
 var c config
@@ -36,7 +37,7 @@ func LoadConfig() error {
     err = json.Unmarshal(body, &c)
 
     if err != nil {
-        fmt.Println(err)
+        fmt.Println("JSON Error", err)
         return err
     }
 
