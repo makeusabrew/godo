@@ -5,7 +5,6 @@ import (
     "log"
     "io/ioutil"
     "bufio"
-    "encoding/json"
     "regexp"
     "strings"
 )
@@ -64,6 +63,7 @@ func AddTask(text string) {
     order := len(tasks) + 1
     tasks = append(tasks, Task{text, order, false})
 
+    // @TODO decouple writing from task addition; just write on exit
     writeTasks()
 }
 
@@ -100,8 +100,16 @@ func writeTasks() {
     }
 
     for _, task := range tasks {
-        line, _ := json.Marshal(task)
-        _, err := writer.WriteString(string(line) + "\n")
+        line := "- ["
+
+        if task.Done {
+            line += "x"
+        } else {
+            line += " "
+        }
+        line += "] " + task.Text
+
+        _, err := writer.WriteString(line + "\n")
 
         if err != nil {
             log.Fatal(err)
