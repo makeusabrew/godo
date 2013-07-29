@@ -28,7 +28,7 @@ type User struct {
 type GistFile struct {
     Filename string
     Url string `json:"raw_url"`
-    Body string
+    Body []byte
 }
 
 type Gist struct {
@@ -98,7 +98,7 @@ func FetchRemoteTasks() {
 
     done := make(chan bool)
 
-    for key := range gist.Files {
+    for key, file := range gist.Files {
         // re-assigning key here just means we don't have to pass it to
         // the closure
         key := key
@@ -110,22 +110,30 @@ func FetchRemoteTasks() {
             if err == nil {
                 // can't do a read-modify-write, so have to get the current
                 // struct in its entirity and update that then re-assign
-                file := gist.Files[key]
-                file.Body = string(body)
+                file.Body = body
                 gist.Files[key] = file
-                done <- true
             }
+
+            done <- true
         }()
 
     }
 
     // is there a neater way of waiting for all the functions to return rather
     // than blocking len(files) times? feels a bit clunky...
-    for i := 0; i < len(gist.Files); i++ {
+    for _ = range gist.Files {
         <-done
     }
 
-    fmt.Println(gist.Files)
+    for key, file := range gist.Files {
+        writeTaskList(key, file.Body)
+    }
+
+    fmt.Println(string(len(gist.Files)) + " files synced")
+}
+
+func writeTaskList(filename string, data []byte) {
+    ioutil.WriteFile(baseDir() + "/lists/" + filename, data, 0600)
 }
 
 func PushRemoteTasks() {}
